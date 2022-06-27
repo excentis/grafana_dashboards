@@ -1,2 +1,2 @@
 # grafana_dashboards
-Collects a number of Grafana dashboards for Excentis products
+This git repo collects Grafana dashboards for the [ByteBlower GUI](https://setup.byteblower.com/software.html#GUI)
