@@ -31,8 +31,8 @@
     },
     {
       "type": "panel",
-      "id": "stat",
-      "name": "Stat",
+      "id": "table",
+      "name": "Table",
       "version": ""
     },
     {
@@ -68,6 +68,7 @@
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
   "id": null,
+  "iteration": 1658163276484,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -76,10 +77,16 @@
         "type": "prometheus",
         "uid": "${DS_LOCAL_BYTEBLOWER GUI}"
       },
+      "description": "",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto",
+            "inspect": false
           },
           "mappings": [],
           "thresholds": {
@@ -88,10 +95,14 @@
               {
                 "color": "green",
                 "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
               }
             ]
           },
-          "unit": "bps"
+          "unit": "s"
         },
         "overrides": []
       },
@@ -101,20 +112,23 @@
         "x": 0,
         "y": 0
       },
-      "id": 4,
+      "id": 2,
       "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "mean"
-          ],
+        "footer": {
+          "enablePagination": true,
           "fields": "",
-          "values": false
+          "reducer": [
+            "sum"
+          ],
+          "show": false
         },
-        "textMode": "auto"
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Value"
+          }
+        ]
       },
       "pluginVersion": "8.5.2",
       "targets": [
@@ -124,14 +138,30 @@
             "uid": "${DS_LOCAL_BYTEBLOWER GUI}"
           },
           "editorMode": "code",
-          "expr": "sum by(instance) (rate(byteblower_gui_traffic_bytes_total{direction=\"rx\"}[30s])) * 8",
-          "legendFormat": "Total {{instance}}",
-          "range": true,
+          "exemplar": false,
+          "expr": "sum_over_time((present_over_time((sum by (port) (rate(byteblower_gui_traffic_bytes_total{direction=\"rx\"}[1m:10s]) * 8)  < 1E3)[10s:]))[$__range:])",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
           "refId": "A"
         }
       ],
-      "title": "Overall throughput",
-      "type": "stat"
+      "title": "No Traffic Received: Downtime",
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "port",
+                "Value"
+              ]
+            }
+          }
+        }
+      ],
+      "type": "table"
     },
     {
       "datasource": {
@@ -150,10 +180,13 @@
               {
                 "color": "green",
                 "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
               }
             ]
-          },
-          "unit": "decbits"
+          }
         },
         "overrides": []
       },
@@ -163,12 +196,12 @@
         "x": 12,
         "y": 0
       },
-      "id": 7,
+      "id": 6,
       "options": {
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
-            "lastNotNull"
+            "max"
           ],
           "fields": "",
           "values": false
@@ -183,11 +216,16 @@
             "type": "prometheus",
             "uid": "${DS_LOCAL_BYTEBLOWER GUI}"
           },
-          "expr": "max(sum(rate(byteblower_gui_traffic_bytes_total{direction=\"rx\"}[2m])) *8)",
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "count(sum_over_time((present_over_time((sum by (port) (rate(byteblower_gui_traffic_bytes_total{direction=\"rx\"}[1m:10s]) * 8)  < 1E3)[10s:]))[$__range:]))",
+          "format": "table",
+          "instant": true,
+          "range": false,
           "refId": "A"
         }
       ],
-      "title": "Peak Rate",
+      "title": "Panel Title",
       "type": "gauge"
     },
     {
@@ -195,7 +233,6 @@
         "type": "prometheus",
         "uid": "${DS_LOCAL_BYTEBLOWER GUI}"
       },
-      "description": "",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -223,14 +260,13 @@
             "spanNulls": false,
             "stacking": {
               "group": "A",
-              "mode": "normal"
+              "mode": "none"
             },
             "thresholdsStyle": {
               "mode": "off"
             }
           },
           "mappings": [],
-          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -254,7 +290,7 @@
         "x": 0,
         "y": 8
       },
-      "id": 2,
+      "id": 4,
       "options": {
         "legend": {
           "calcs": [],
@@ -273,32 +309,43 @@
             "uid": "${DS_LOCAL_BYTEBLOWER GUI}"
           },
           "editorMode": "code",
-          "expr": "rate(byteblower_gui_traffic_bytes_total{direction=\"rx\"}[30s]) * 8",
-          "legendFormat": "{{flow}} @  {{instance}}",
+          "expr": "rate(byteblower_gui_traffic_bytes_total{direction=\"rx\"}[1m])",
+          "legendFormat": "{{flow}} :: {{port}}",
           "range": true,
           "refId": "A"
         }
       ],
-      "thresholds": [],
-      "title": "Flow throughput",
+      "title": "Rx throughput",
       "type": "timeseries"
     }
   ],
-  "refresh": "5s",
+  "refresh": "30s",
   "schemaVersion": 36,
   "style": "dark",
   "tags": [],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "y-yHJdl7z"
+        },
+        "filters": [],
+        "hide": 0,
+        "name": "Filters",
+        "skipUrlSync": false,
+        "type": "adhoc"
+      }
+    ]
   },
   "time": {
-    "from": "now-15m",
+    "from": "now-1h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
-  "title": "Flow throughput",
-  "uid": "so9PPL3nz",
-  "version": 15,
+  "title": "Connection loss",
+  "uid": "olWfuKg4k",
+  "version": 6,
   "weekStart": ""
 }

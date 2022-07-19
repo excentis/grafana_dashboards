@@ -34,12 +34,6 @@
       "id": "stat",
       "name": "Stat",
       "version": ""
-    },
-    {
-      "type": "panel",
-      "id": "timeseries",
-      "name": "Time series",
-      "version": ""
     }
   ],
   "annotations": {
@@ -88,10 +82,14 @@
               {
                 "color": "green",
                 "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
               }
             ]
           },
-          "unit": "bps"
+          "unit": "percentunit"
         },
         "overrides": []
       },
@@ -101,7 +99,7 @@
         "x": 0,
         "y": 0
       },
-      "id": 4,
+      "id": 6,
       "options": {
         "colorMode": "value",
         "graphMode": "area",
@@ -123,14 +121,11 @@
             "type": "prometheus",
             "uid": "${DS_LOCAL_BYTEBLOWER GUI}"
           },
-          "editorMode": "code",
-          "expr": "sum by(instance) (rate(byteblower_gui_traffic_bytes_total{direction=\"rx\"}[30s])) * 8",
-          "legendFormat": "Total {{instance}}",
-          "range": true,
+          "expr": "avg_over_time((group(byteblower_gui_traffic_bytes_created) or vector(0))[$__interval:])",
           "refId": "A"
         }
       ],
-      "title": "Overall throughput",
+      "title": "System usage",
       "type": "stat"
     },
     {
@@ -153,17 +148,17 @@
               }
             ]
           },
-          "unit": "decbits"
+          "unit": "string"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
+        "w": 6,
         "x": 12,
         "y": 0
       },
-      "id": 7,
+      "id": 2,
       "options": {
         "orientation": "auto",
         "reduceOptions": {
@@ -183,11 +178,14 @@
             "type": "prometheus",
             "uid": "${DS_LOCAL_BYTEBLOWER GUI}"
           },
-          "expr": "max(sum(rate(byteblower_gui_traffic_bytes_total{direction=\"rx\"}[2m])) *8)",
+          "editorMode": "code",
+          "expr": "count(group by(port) (resets(byteblower_gui_traffic_bytes_total[20s])))",
+          "legendFormat": "__auto",
+          "range": true,
           "refId": "A"
         }
       ],
-      "title": "Peak Rate",
+      "title": "ByteBlower Ports",
       "type": "gauge"
     },
     {
@@ -195,42 +193,12 @@
         "type": "prometheus",
         "uid": "${DS_LOCAL_BYTEBLOWER GUI}"
       },
-      "description": "",
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "normal"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
+            "mode": "thresholds"
           },
           "mappings": [],
-          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -244,28 +212,30 @@
               }
             ]
           },
-          "unit": "bps"
+          "unit": "string"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 8
+        "w": 6,
+        "x": 18,
+        "y": 0
       },
-      "id": 2,
+      "id": 4,
       "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom"
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
         },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
       },
+      "pluginVersion": "8.5.2",
       "targets": [
         {
           "datasource": {
@@ -273,18 +243,135 @@
             "uid": "${DS_LOCAL_BYTEBLOWER GUI}"
           },
           "editorMode": "code",
-          "expr": "rate(byteblower_gui_traffic_bytes_total{direction=\"rx\"}[30s]) * 8",
-          "legendFormat": "{{flow}} @  {{instance}}",
+          "expr": "count(group by(flow) (resets(byteblower_gui_traffic_bytes_created[30s])))",
+          "legendFormat": "Port",
           "range": true,
           "refId": "A"
         }
       ],
-      "thresholds": [],
-      "title": "Flow throughput",
-      "type": "timeseries"
+      "title": "Byteblower Flows",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_LOCAL_BYTEBLOWER GUI}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "bps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 8,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.5.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_LOCAL_BYTEBLOWER GUI}"
+          },
+          "expr": "sum(rate(byteblower_gui_traffic_bytes_total{direction=\"tx\"}[1m])) * 8",
+          "refId": "A"
+        }
+      ],
+      "title": "Tx Speed",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_LOCAL_BYTEBLOWER GUI}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "bps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 9,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.5.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_LOCAL_BYTEBLOWER GUI}"
+          },
+          "expr": "sum(rate(byteblower_gui_traffic_bytes_total{direction=\"rx\"}[1m])) * 8",
+          "refId": "A"
+        }
+      ],
+      "title": "Rx Speed",
+      "type": "stat"
     }
   ],
-  "refresh": "5s",
+  "refresh": "30s",
   "schemaVersion": 36,
   "style": "dark",
   "tags": [],
@@ -292,13 +379,13 @@
     "list": []
   },
   "time": {
-    "from": "now-15m",
+    "from": "now-30m",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
-  "title": "Flow throughput",
-  "uid": "so9PPL3nz",
-  "version": 15,
+  "title": "byteblower_usage",
+  "uid": "SvXEp5R4k",
+  "version": 5,
   "weekStart": ""
 }

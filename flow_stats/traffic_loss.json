@@ -31,8 +31,8 @@
     },
     {
       "type": "panel",
-      "id": "stat",
-      "name": "Stat",
+      "id": "table",
+      "name": "Table",
       "version": ""
     },
     {
@@ -76,10 +76,16 @@
         "type": "prometheus",
         "uid": "${DS_LOCAL_BYTEBLOWER GUI}"
       },
+      "description": "",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto",
+            "inspect": false
           },
           "mappings": [],
           "thresholds": {
@@ -88,33 +94,34 @@
               {
                 "color": "green",
                 "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
               }
             ]
           },
-          "unit": "bps"
+          "unit": "percentunit"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
+        "w": 11,
         "x": 0,
         "y": 0
       },
       "id": 4,
       "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "mean"
-          ],
+        "footer": {
+          "enablePagination": true,
           "fields": "",
-          "values": false
+          "reducer": [
+            "sum"
+          ],
+          "show": false
         },
-        "textMode": "auto"
+        "showHeader": false
       },
       "pluginVersion": "8.5.2",
       "targets": [
@@ -124,14 +131,29 @@
             "uid": "${DS_LOCAL_BYTEBLOWER GUI}"
           },
           "editorMode": "code",
-          "expr": "sum by(instance) (rate(byteblower_gui_traffic_bytes_total{direction=\"rx\"}[30s])) * 8",
-          "legendFormat": "Total {{instance}}",
-          "range": true,
+          "exemplar": false,
+          "expr": "(sum by(flow) (byteblower_gui_traffic_bytes_total{direction=\"tx\"}) - sum by (flow) (byteblower_gui_traffic_bytes_total{direction=\"rx\"})) / sum by(flow) (byteblower_gui_traffic_bytes_total{direction=\"tx\"})",
+          "format": "table",
+          "instant": true,
+          "range": false,
           "refId": "A"
         }
       ],
-      "title": "Overall throughput",
-      "type": "stat"
+      "title": "Traffic Loss percentage",
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "flow",
+                "Value"
+              ]
+            }
+          }
+        }
+      ],
+      "type": "table"
     },
     {
       "datasource": {
@@ -150,20 +172,24 @@
               {
                 "color": "green",
                 "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
               }
             ]
           },
-          "unit": "decbits"
+          "unit": "decbytes"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 12,
+        "x": 11,
         "y": 0
       },
-      "id": 7,
+      "id": 6,
       "options": {
         "orientation": "auto",
         "reduceOptions": {
@@ -183,11 +209,11 @@
             "type": "prometheus",
             "uid": "${DS_LOCAL_BYTEBLOWER GUI}"
           },
-          "expr": "max(sum(rate(byteblower_gui_traffic_bytes_total{direction=\"rx\"}[2m])) *8)",
+          "expr": "sum(byteblower_gui_traffic_bytes_total{direction=\"tx\"}) -  sum(byteblower_gui_traffic_bytes_total{direction=\"rx\"})",
           "refId": "A"
         }
       ],
-      "title": "Peak Rate",
+      "title": "Total traffic lost",
       "type": "gauge"
     },
     {
@@ -195,7 +221,6 @@
         "type": "prometheus",
         "uid": "${DS_LOCAL_BYTEBLOWER GUI}"
       },
-      "description": "",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -223,14 +248,13 @@
             "spanNulls": false,
             "stacking": {
               "group": "A",
-              "mode": "normal"
+              "mode": "none"
             },
             "thresholdsStyle": {
               "mode": "off"
             }
           },
           "mappings": [],
-          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -244,13 +268,13 @@
               }
             ]
           },
-          "unit": "bps"
+          "unit": "decbytes"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 8,
-        "w": 24,
+        "w": 23,
         "x": 0,
         "y": 8
       },
@@ -266,6 +290,7 @@
           "sort": "none"
         }
       },
+      "pluginVersion": "8.5.2",
       "targets": [
         {
           "datasource": {
@@ -273,18 +298,17 @@
             "uid": "${DS_LOCAL_BYTEBLOWER GUI}"
           },
           "editorMode": "code",
-          "expr": "rate(byteblower_gui_traffic_bytes_total{direction=\"rx\"}[30s]) * 8",
-          "legendFormat": "{{flow}} @  {{instance}}",
+          "expr": "sum by(flow) (byteblower_gui_traffic_bytes_total{direction=\"tx\"}) - sum by (flow) (byteblower_gui_traffic_bytes_total{direction=\"rx\"})",
+          "legendFormat": "{{label_name}}",
           "range": true,
           "refId": "A"
         }
       ],
-      "thresholds": [],
-      "title": "Flow throughput",
+      "title": "Lost traffic",
       "type": "timeseries"
     }
   ],
-  "refresh": "5s",
+  "refresh": "",
   "schemaVersion": 36,
   "style": "dark",
   "tags": [],
@@ -292,13 +316,13 @@
     "list": []
   },
   "time": {
-    "from": "now-15m",
+    "from": "now-6h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
-  "title": "Flow throughput",
-  "uid": "so9PPL3nz",
-  "version": 15,
+  "title": "Flow loss counters",
+  "uid": "w9dvjFg4k",
+  "version": 5,
   "weekStart": ""
 }
